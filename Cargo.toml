@@ -1,0 +1,17 @@
+[package]
+name = "set-rust-version-latest"
+description = "CLI for updating a Cargo.toml rust-version to the latest stable version."
+homepage = "https://github.com/leighmcculloch/set-rust-version-latest"
+repository = "https://github.com/leighmcculloch/set-rust-version-latest"
+authors = ["Leigh McCulloch"]
+version = "0.0.1"
+edition = "2021"
+rust-version = "1.62"
+
+[dependencies]
+clap = { version = "3.2.16", features = ["derive", "env"] }
+thiserror = "1.0.32"
+cargo_toml = "0.11.5"
+toml = "0.5.9"
+reqwest = { version = "0.11.11", features = ["blocking"] }
+serde = { version = "1.0.143", features = ["derive"]}
