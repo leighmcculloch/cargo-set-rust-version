@@ -1,6 +1,6 @@
 //! Update Cargo.toml rust-version to latest.
 
-#![allow(clippy::missing_panics_doc, clippy::missing_errors_doc)]
+#![allow(clippy::missing_errors_doc)]
 
 use clap::{AppSettings, Parser};
 use std::fs;
@@ -42,6 +42,16 @@ enum Error {
 
     #[error("parsing release info")]
     ParsingReleaseInfo(#[from] toml::de::Error),
+    #[error("parsing release info pkg section is missing")]
+    ReleaseInfoPkgSectionIsMissing,
+    #[error("parsing release info rustc section is missing")]
+    ReleaseInfoRustcSectionIsMissing,
+    #[error("parsing release info rustc version is missing")]
+    ReleaseInfoRustCVersionIsMissing,
+    #[error("parsing release info rustc version is not string")]
+    ReleaseInfoRustCVersionIsNotString,
+    #[error("parsing release info rustc version is empty")]
+    ReleaseInfoRustCVersionIsEmpty,
 
     #[error("writing manifrst")]
     WritingManifest(io::Error),
@@ -74,8 +84,19 @@ impl SetRustVersionCmd {
             let resp = reqwest::blocking::get(url)?;
             let bytes = &resp.bytes()?;
             let info: toml::Value = toml::from_slice(bytes)?;
-            let version_and_meta = info["pkg"]["rustc"]["version"].as_str().unwrap();
-            let version = version_and_meta.split(' ').next().unwrap();
+            let version_and_meta = info
+                .get("pkg")
+                .ok_or(Error::ReleaseInfoPkgSectionIsMissing)?
+                .get("rustc")
+                .ok_or(Error::ReleaseInfoRustcSectionIsMissing)?
+                .get("version")
+                .ok_or(Error::ReleaseInfoRustCVersionIsMissing)?
+                .as_str()
+                .ok_or(Error::ReleaseInfoRustCVersionIsNotString)?;
+            let version = version_and_meta
+                .split(' ')
+                .next()
+                .ok_or(Error::ReleaseInfoRustCVersionIsEmpty)?;
             let major_minor_version = version.split('.').take(2).collect::<Vec<_>>().join(".");
             major_minor_version
         };
