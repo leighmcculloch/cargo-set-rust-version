@@ -25,3 +25,6 @@ doc:
 
 readme:
 	cargo readme > README.md
+
+publish:
+	cargo publish
