@@ -12,7 +12,8 @@ rust-version = "1.62"
 "#,
     )?;
 
-    let mut cmd = Command::cargo_bin("set-rust-version")?;
+    let mut cmd = Command::cargo_bin("cargo-set-rust-version")?;
+    cmd.arg("set-rust-version");
     cmd.arg("--manifest").arg(manifest.path());
     cmd.arg("--channel").arg("1.62");
     cmd.assert().success().stdout(format!(

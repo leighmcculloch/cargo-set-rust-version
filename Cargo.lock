@@ -92,6 +92,19 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ec8a7b6a70fde80372154c65702f00a0f56f3e1c36abbc6c440484be248856db"
 
 [[package]]
+name = "cargo-set-rust-version"
+version = "0.0.1"
+dependencies = [
+ "assert_cmd",
+ "assert_fs",
+ "clap",
+ "reqwest",
+ "thiserror",
+ "toml",
+ "toml_edit",
+]
+
+[[package]]
 name = "cc"
 version = "1.0.73"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -888,19 +901,6 @@ dependencies = [
  "itoa",
  "ryu",
  "serde",
-]
-
-[[package]]
-name = "set-rust-version"
-version = "0.0.1"
-dependencies = [
- "assert_cmd",
- "assert_fs",
- "clap",
- "reqwest",
- "thiserror",
- "toml",
- "toml_edit",
 ]
 
 [[package]]

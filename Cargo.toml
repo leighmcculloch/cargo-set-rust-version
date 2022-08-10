@@ -1,8 +1,8 @@
 [package]
-name = "set-rust-version"
+name = "cargo-set-rust-version"
 description = "CLI for updating a Cargo.toml rust-version to latest."
-homepage = "https://github.com/leighmcculloch/set-rust-version"
-repository = "https://github.com/leighmcculloch/set-rust-version"
+homepage = "https://github.com/leighmcculloch/cargo-set-rust-version"
+repository = "https://github.com/leighmcculloch/cargo-set-rust-version"
 authors = ["Leigh McCulloch"]
 version = "0.0.1"
 edition = "2021"

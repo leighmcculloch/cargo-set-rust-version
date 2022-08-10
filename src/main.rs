@@ -7,7 +7,13 @@ use std::io::{self, Write};
 #[derive(Parser, Debug)]
 #[clap(version, disable_help_subcommand = true, disable_version_flag = true)]
 #[clap(global_setting(AppSettings::DeriveDisplayOrder))]
-pub struct Root {
+#[clap(bin_name = "cargo")]
+pub enum Root {
+    SetRustVersion(SetRustVersion),
+}
+
+#[derive(Parser, Debug)]
+pub struct SetRustVersion {
     /// Cargo.toml file path
     #[clap(long, parse(from_os_str), default_value("Cargo.toml"))]
     manifest: std::path::PathBuf,
@@ -33,7 +39,7 @@ pub enum Error {
     WritingManifest(io::Error),
 }
 
-impl Root {
+impl SetRustVersion {
     pub fn run(&self) -> Result<(), Error> {
         // Collect current rust-version.
         println!("manifest file: {}", self.manifest.to_string_lossy());
@@ -93,8 +99,9 @@ impl Root {
 }
 
 fn main() {
-    let root = Root::parse();
-    if let Err(e) = root.run() {
+    if let Err(e) = match Root::parse() {
+        Root::SetRustVersion(cmd) => cmd.run(),
+    } {
         eprintln!("error: {}", e);
     }
 }
