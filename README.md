@@ -3,3 +3,5 @@
 # cargo-set-rust-version
 
 Update Cargo.toml rust-version to latest.
+
+License: Apache-2.0
