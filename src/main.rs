@@ -1,3 +1,7 @@
+//! Update Cargo.toml rust-version to latest.
+
+#![allow(clippy::missing_panics_doc, clippy::missing_errors_doc)]
+
 use clap::{AppSettings, Parser};
 use std::fs;
 use std::io::{self, Write};
@@ -11,13 +15,13 @@ use std::io::{self, Write};
 )]
 #[clap(global_setting(AppSettings::DeriveDisplayOrder))]
 #[clap(bin_name = "cargo")]
-pub enum Root {
-    SetRustVersion(SetRustVersion),
+enum RootCmd {
+    SetRustVersion(SetRustVersionCmd),
 }
 
 #[derive(Parser, Debug)]
 #[clap(version, about)]
-pub struct SetRustVersion {
+struct SetRustVersionCmd {
     /// Cargo.toml file path
     #[clap(long, parse(from_os_str), default_value("Cargo.toml"))]
     manifest: std::path::PathBuf,
@@ -27,7 +31,7 @@ pub struct SetRustVersion {
 }
 
 #[derive(thiserror::Error, Debug)]
-pub enum Error {
+enum Error {
     #[error("reading manifest")]
     ReadingManifest(io::Error),
     #[error("parsing manifest")]
@@ -43,7 +47,7 @@ pub enum Error {
     WritingManifest(io::Error),
 }
 
-impl SetRustVersion {
+impl SetRustVersionCmd {
     pub fn run(&self) -> Result<(), Error> {
         // Collect current rust-version.
         println!("manifest file: {}", self.manifest.to_string_lossy());
@@ -103,8 +107,8 @@ impl SetRustVersion {
 }
 
 fn main() {
-    if let Err(e) = match Root::parse() {
-        Root::SetRustVersion(cmd) => cmd.run(),
+    if let Err(e) = match RootCmd::parse() {
+        RootCmd::SetRustVersion(cmd) => cmd.run(),
     } {
         eprintln!("error: {}", e);
     }
