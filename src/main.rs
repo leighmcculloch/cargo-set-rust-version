@@ -1,5 +1,3 @@
-#![allow(clippy::items_after_statements)]
-
 use clap::{AppSettings, Parser};
 use std::fs;
 use std::io::{self, Write};
