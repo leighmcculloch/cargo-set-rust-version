@@ -18,10 +18,9 @@ rust-version = "1.61"
     cmd.arg("--manifest").arg(manifest.path());
     cmd.arg("--channel").arg("1.62");
     cmd.assert().success().stdout(format!(
-        "manifest file: {}
-current rust-version: 1.61
-channel: 1.62
+        "channel: 1.62
 latest rust-version: 1.62
+manifest file: {}
 updating rust-version: 1.61 => 1.62
 ",
         manifest.path().to_string_lossy()

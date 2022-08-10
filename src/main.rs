@@ -1,5 +1,7 @@
 //! Update Cargo.toml rust-version to latest.
 //!
+//! If the given manifest is a workspace, all members are updated.
+//!
 //! # Install
 //!
 //! ```
@@ -51,6 +53,13 @@ enum Error {
     #[error("parsing manifest")]
     ParsingManifest(toml_edit::TomlError),
 
+    #[error("parsing manifest workspace members is missing")]
+    WorkspaceMembersIsMissing,
+    #[error("parsing manifest workspace members is not array")]
+    WorkspaceMembersIsNotArray,
+    #[error("parsing manifest workspace member is not string")]
+    WorkspaceMemberIsNotString,
+
     #[error("making http request")]
     Reqwest(#[from] reqwest::Error),
 
@@ -73,21 +82,6 @@ enum Error {
 
 impl SetRustVersionCmd {
     pub fn run(&self) -> Result<(), Error> {
-        // Collect current rust-version.
-        println!("manifest file: {}", self.manifest.to_string_lossy());
-        let manifest_raw = fs::read_to_string(&self.manifest).map_err(Error::ReadingManifest)?;
-        let mut manifest = manifest_raw
-            .parse::<toml_edit::Document>()
-            .map_err(Error::ParsingManifest)?;
-        let current_version = manifest
-            .get("package")
-            .and_then(|package| package.get("rust-version"))
-            .and_then(toml_edit::Item::as_str);
-        println!(
-            "current rust-version: {}",
-            current_version.unwrap_or("None")
-        );
-
         // Collect latest rust-version.
         println!("channel: {}", self.channel);
         let latest_version = {
@@ -116,9 +110,53 @@ impl SetRustVersionCmd {
         };
         println!("latest rust-version: {}", latest_version);
 
+        self.run_for_manifest(&self.manifest, &latest_version)
+    }
+
+    pub fn run_for_manifest(
+        &self,
+        manifest_path: impl AsRef<std::path::Path>,
+        latest_version: &str,
+    ) -> Result<(), Error> {
+        println!(
+            "manifest file: {}",
+            manifest_path.as_ref().to_string_lossy()
+        );
+        let manifest_raw = fs::read_to_string(&manifest_path).map_err(Error::ReadingManifest)?;
+        let mut manifest = manifest_raw
+            .parse::<toml_edit::Document>()
+            .map_err(Error::ParsingManifest)?;
+
+        // Check if workspace, and recursively load member manifests if so.
+        if let Some(workspace) = manifest.get("workspace") {
+            let workspace_path = manifest_path
+                .as_ref()
+                .parent()
+                .unwrap_or_else(|| manifest_path.as_ref());
+            let members = workspace
+                .get("members")
+                .ok_or(Error::WorkspaceMembersIsMissing)?
+                .as_array()
+                .ok_or(Error::WorkspaceMembersIsNotArray)?;
+            for m in members {
+                let m_path = workspace_path
+                    .join(m.as_str().ok_or(Error::WorkspaceMemberIsNotString)?)
+                    .join("Cargo.toml");
+                self.run_for_manifest(m_path, latest_version)?;
+            }
+            return Ok(());
+        }
+
+        // Collect current rust-version.
+        let current_version = manifest
+            .get("package")
+            .and_then(|package| package.get("rust-version"))
+            .and_then(toml_edit::Item::as_str);
+
         // If current and latest are same, do nothing.
         if let Some(current_version) = current_version {
             if current_version == latest_version {
+                println!("up-to-date rust-version: {}", current_version);
                 return Ok(());
             }
         }
@@ -132,7 +170,7 @@ impl SetRustVersionCmd {
         manifest["package"]["rust-version"] = toml_edit::value(latest_version);
         fs::OpenOptions::new()
             .write(true)
-            .open(&self.manifest)
+            .open(&manifest_path)
             .map_err(Error::WritingManifest)?
             .write_all(manifest.to_string().as_bytes())
             .map_err(Error::WritingManifest)?;
