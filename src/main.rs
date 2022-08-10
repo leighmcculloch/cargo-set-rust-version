@@ -5,7 +5,12 @@ use std::fs;
 use std::io::{self, Write};
 
 #[derive(Parser, Debug)]
-#[clap(version, disable_help_subcommand = true, disable_version_flag = true)]
+#[clap(
+    version,
+    about,
+    disable_help_subcommand = true,
+    disable_version_flag = true
+)]
 #[clap(global_setting(AppSettings::DeriveDisplayOrder))]
 #[clap(bin_name = "cargo")]
 pub enum Root {
@@ -13,6 +18,7 @@ pub enum Root {
 }
 
 #[derive(Parser, Debug)]
+#[clap(version, about)]
 pub struct SetRustVersion {
     /// Cargo.toml file path
     #[clap(long, parse(from_os_str), default_value("Cargo.toml"))]
