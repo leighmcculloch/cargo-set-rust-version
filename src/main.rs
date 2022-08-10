@@ -18,36 +18,36 @@ pub struct Root {
 
 #[derive(thiserror::Error, Debug)]
 pub enum Error {
-    #[error("loading manifest")]
-    TomlEdit(#[from] toml_edit::TomlError),
-    #[error("missing [package] section in manifest")]
-    MissingPackage,
-    #[error("must be string")]
-    MustBeString,
+    #[error("reading manifrst")]
+    ReadingManifest(io::Error),
+    #[error("parsing manifest")]
+    ParsingManifest(toml_edit::TomlError),
+    #[error("manifest.package missing")]
+    ManifestPackageMissing,
 
     #[error("making http request")]
     Reqwest(#[from] reqwest::Error),
 
-    #[error("parsing channel info")]
-    TomlDe(#[from] toml::de::Error),
+    #[error("parsing release info")]
+    ParsingReleaseInfo(#[from] toml::de::Error),
 
-    #[error("writing manifest")]
-    TomlSer(#[from] toml::ser::Error),
-    #[error("writing file")]
-    Io(#[from] io::Error),
+    #[error("writing manifrst")]
+    WritingManifest(io::Error),
 }
 
 impl Root {
     pub fn run(&self) -> Result<(), Error> {
         // Collect current rust-version.
         println!("manifest file: {}", self.manifest.to_string_lossy());
-        let manifest_raw = fs::read_to_string(&self.manifest)?;
-        let mut manifest = manifest_raw.parse::<toml_edit::Document>()?;
-        let package = manifest.get("package").ok_or(Error::MissingPackage)?;
-        let current_version = package
+        let manifest_raw = fs::read_to_string(&self.manifest).map_err(Error::ReadingManifest)?;
+        let mut manifest = manifest_raw
+            .parse::<toml_edit::Document>()
+            .map_err(Error::ParsingManifest)?;
+        let current_version = manifest
+            .get("package")
+            .ok_or(Error::ManifestPackageMissing)?
             .get("rust-version")
-            .map(|item| item.as_str().ok_or(Error::MustBeString))
-            .transpose()?;
+            .and_then(toml_edit::Item::as_str);
         println!(
             "current rust-version: {}",
             current_version.unwrap_or("None")
@@ -86,8 +86,10 @@ impl Root {
         manifest["package"]["rust-version"] = toml_edit::value(latest_version);
         fs::OpenOptions::new()
             .write(true)
-            .open(&self.manifest)?
-            .write_all(manifest.to_string().as_bytes())?;
+            .open(&self.manifest)
+            .map_err(Error::WritingManifest)?
+            .write_all(manifest.to_string().as_bytes())
+            .map_err(Error::WritingManifest)?;
 
         Ok(())
     }
