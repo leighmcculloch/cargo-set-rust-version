@@ -22,8 +22,6 @@ pub enum Error {
     ReadingManifest(io::Error),
     #[error("parsing manifest")]
     ParsingManifest(toml_edit::TomlError),
-    #[error("manifest.package missing")]
-    ManifestPackageMissing,
 
     #[error("making http request")]
     Reqwest(#[from] reqwest::Error),
@@ -45,8 +43,7 @@ impl Root {
             .map_err(Error::ParsingManifest)?;
         let current_version = manifest
             .get("package")
-            .ok_or(Error::ManifestPackageMissing)?
-            .get("rust-version")
+            .and_then(|package| package.get("rust-version"))
             .and_then(toml_edit::Item::as_str);
         println!(
             "current rust-version: {}",
