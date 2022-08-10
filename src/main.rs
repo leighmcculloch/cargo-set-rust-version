@@ -1,4 +1,18 @@
 //! Update Cargo.toml rust-version to latest.
+//!
+//! # Install
+//!
+//! ```
+//! cargo install --locked cargo-set-rust-version
+//! ```
+//!
+//! # Usage
+//!
+//! Update the `rust-version` to the latest stable version:
+//!
+//! ```
+//! cargo set-rust-version
+//! ```
 
 #![allow(clippy::missing_errors_doc)]
 
