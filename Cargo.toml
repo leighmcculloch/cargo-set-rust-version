@@ -1,6 +1,6 @@
 [package]
 name = "cargo-set-rust-version"
-description = "Update a Cargo.toml rust-version to latest."
+description = "Update Cargo.toml rust-version to latest."
 homepage = "https://github.com/leighmcculloch/cargo-set-rust-version"
 repository = "https://github.com/leighmcculloch/cargo-set-rust-version"
 authors = ["Leigh McCulloch"]
