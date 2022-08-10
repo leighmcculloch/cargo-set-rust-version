@@ -891,7 +891,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "set-rust-version-latest"
+name = "set-rust-version"
 version = "0.0.1"
 dependencies = [
  "assert_cmd",
