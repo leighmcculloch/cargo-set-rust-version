@@ -23,7 +23,7 @@ pub struct SetRustVersion {
     /// Cargo.toml file path
     #[clap(long, parse(from_os_str), default_value("Cargo.toml"))]
     manifest: std::path::PathBuf,
-    /// Channel to use latest version (stable, nightly)
+    /// Channel to use latest version
     #[clap(long, default_value("stable"))]
     channel: String,
 }
