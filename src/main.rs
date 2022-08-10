@@ -18,7 +18,7 @@ pub struct Root {
 
 #[derive(thiserror::Error, Debug)]
 pub enum Error {
-    #[error("reading manifrst")]
+    #[error("reading manifest")]
     ReadingManifest(io::Error),
     #[error("parsing manifest")]
     ParsingManifest(toml_edit::TomlError),
@@ -95,6 +95,6 @@ impl Root {
 fn main() {
     let root = Root::parse();
     if let Err(e) = root.run() {
-        eprintln!("error: {:?}", e);
+        eprintln!("error: {}", e);
     }
 }
