@@ -11,7 +11,7 @@ rust-version = "1.62"
 [dependencies]
 clap = { version = "3.2.16", features = ["derive", "env"] }
 thiserror = "1.0.32"
-cargo_toml = "0.11.5"
 toml = "0.5.9"
+toml_edit = "0.14.4"
 reqwest = { version = "0.11.11", features = ["blocking"] }
 serde = { version = "1.0.143", features = ["derive"]}

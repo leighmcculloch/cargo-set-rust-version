@@ -1,8 +1,7 @@
 #![allow(clippy::items_after_statements)]
 
-use cargo_toml::Manifest;
 use clap::{AppSettings, Parser};
-use std::fs::{self};
+use std::fs;
 use std::io::{self, Write};
 
 #[derive(Parser, Debug)]
@@ -20,9 +19,11 @@ pub struct Root {
 #[derive(thiserror::Error, Debug)]
 pub enum Error {
     #[error("loading manifest")]
-    CargoToml(#[from] cargo_toml::Error),
+    TomlEdit(#[from] toml_edit::TomlError),
     #[error("missing [package] section in manifest")]
     MissingPackage,
+    #[error("must be string")]
+    MustBeString,
 
     #[error("making http request")]
     Reqwest(#[from] reqwest::Error),
@@ -40,12 +41,16 @@ impl Root {
     pub fn run(&self) -> Result<(), Error> {
         // Collect current rust-version.
         println!("manifest file: {}", self.manifest.to_string_lossy());
-        let mut manifest = Manifest::from_path(&self.manifest)?;
-        let mut package = manifest.package.ok_or(Error::MissingPackage)?;
-        let current_version = package.rust_version;
+        let manifest_raw = fs::read_to_string(&self.manifest)?;
+        let mut manifest = manifest_raw.parse::<toml_edit::Document>()?;
+        let package = manifest.get("package").ok_or(Error::MissingPackage)?;
+        let current_version = package
+            .get("rust-version")
+            .map(|item| item.as_str().ok_or(Error::MustBeString))
+            .transpose()?;
         println!(
             "current rust-version: {}",
-            current_version.as_deref().unwrap_or("<not set>")
+            current_version.unwrap_or("None")
         );
 
         // Collect latest rust-version.
@@ -73,10 +78,16 @@ impl Root {
         }
 
         // Update rust-version to latest.
-        package.rust_version = Some(latest_version);
-        manifest.package = Some(package);
-        let mut file = fs::OpenOptions::new().write(true).open(&self.manifest)?;
-        file.write_all(&toml::to_vec(&manifest)?)?;
+        println!(
+            "updating version: {} => {}",
+            current_version.unwrap_or("None"),
+            latest_version
+        );
+        manifest["package"]["rust-version"] = toml_edit::value(latest_version);
+        fs::OpenOptions::new()
+            .write(true)
+            .open(&self.manifest)?
+            .write_all(manifest.to_string().as_bytes())?;
 
         Ok(())
     }
