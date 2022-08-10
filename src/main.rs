@@ -76,7 +76,7 @@ impl Root {
 
         // Update rust-version to latest.
         println!(
-            "updating version: {} => {}",
+            "updating rust-version: {} => {}",
             current_version.unwrap_or("None"),
             latest_version
         );
