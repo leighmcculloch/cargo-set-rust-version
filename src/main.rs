@@ -61,10 +61,12 @@ enum Error {
     WorkspaceMemberIsNotString,
 
     #[error("making http request")]
-    Reqwest(#[from] reqwest::Error),
+    Http(#[from] ureq::Error),
 
-    #[error("parsing release info")]
-    ParsingReleaseInfo(#[from] toml::de::Error),
+    #[error("making http request not string")]
+    ParsingReleaseInfoNotString,
+    #[error("parsing release info not valid toml")]
+    ParsingReleaseInfoNotValidToml(#[from] toml::de::Error),
     #[error("parsing release info pkg section is missing")]
     ReleaseInfoPkgSectionIsMissing,
     #[error("parsing release info rustc section is missing")]
@@ -89,9 +91,11 @@ impl SetRustVersionCmd {
                 "https://static.rust-lang.org/dist/channel-rust-{}.toml",
                 self.channel
             );
-            let resp = reqwest::blocking::get(url)?;
-            let bytes = &resp.bytes()?;
-            let info: toml::Value = toml::from_slice(bytes)?;
+            let body = ureq::get(&url)
+                .call()?
+                .into_string()
+                .map_err(|_| Error::ParsingReleaseInfoNotString)?;
+            let info: toml::Value = toml::from_str(&body)?;
             let version_and_meta = info
                 .get("pkg")
                 .ok_or(Error::ReleaseInfoPkgSectionIsMissing)?
