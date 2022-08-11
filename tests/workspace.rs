@@ -34,11 +34,12 @@ rust-version = "1.62"
     cmd.assert().success().stdout(format!(
         "channel: 1.62
 latest rust-version: 1.62
-manifest file: {}
-manifest file: {}
-updating rust-version: 1.60 => 1.62
-manifest file: {}
-up-to-date rust-version: 1.62
+{0}: reading
+{0}: found workspace
+{1}: reading
+{1}: updating rust-version: 1.60 => 1.62
+{2}: reading
+{2}: up-to-date rust-version: 1.62
 ",
         manifest.path().to_string_lossy(),
         manifest_a.path().to_string_lossy(),

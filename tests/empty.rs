@@ -14,8 +14,8 @@ fn empty() -> Result<(), Box<dyn std::error::Error>> {
     cmd.assert().success().stdout(format!(
         "channel: 1.62
 latest rust-version: 1.62
-manifest file: {}
-updating rust-version: None => 1.62
+{0}: reading
+{0}: updating rust-version: None => 1.62
 ",
         manifest.path().to_string_lossy()
     ));

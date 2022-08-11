@@ -118,10 +118,8 @@ impl SetRustVersionCmd {
         manifest_path: impl AsRef<std::path::Path>,
         latest_version: &str,
     ) -> Result<(), Error> {
-        println!(
-            "manifest file: {}",
-            manifest_path.as_ref().to_string_lossy()
-        );
+        let manifest_path_str = manifest_path.as_ref().to_string_lossy();
+        println!("{}: reading", manifest_path_str);
         let manifest_raw = fs::read_to_string(&manifest_path).map_err(Error::ReadingManifest)?;
         let mut manifest = manifest_raw
             .parse::<toml_edit::Document>()
@@ -129,6 +127,7 @@ impl SetRustVersionCmd {
 
         // Check if workspace, and recursively load member manifests if so.
         if let Some(workspace) = manifest.get("workspace") {
+            println!("{}: found workspace", manifest_path_str);
             let workspace_path = manifest_path
                 .as_ref()
                 .parent()
@@ -156,14 +155,18 @@ impl SetRustVersionCmd {
         // If current and latest are same, do nothing.
         if let Some(current_version) = current_version {
             if current_version == latest_version {
-                println!("up-to-date rust-version: {}", current_version);
+                println!(
+                    "{}: up-to-date rust-version: {}",
+                    manifest_path_str, current_version
+                );
                 return Ok(());
             }
         }
 
         // Update rust-version to latest.
         println!(
-            "updating rust-version: {} => {}",
+            "{}: updating rust-version: {} => {}",
+            manifest_path_str,
             current_version.unwrap_or("None"),
             latest_version
         );
