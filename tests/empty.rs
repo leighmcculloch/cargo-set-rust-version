@@ -15,15 +15,11 @@ fn empty() -> Result<(), Box<dyn std::error::Error>> {
         "channel: 1.62
 latest rust-version: 1.62
 {0}: reading
-{0}: updating rust-version: None => 1.62
 ",
         manifest.path().to_string_lossy()
     ));
 
-    manifest.assert(
-        r#"package = { rust-version = "1.62" }
-"#,
-    );
+    manifest.assert("");
 
     Ok(())
 }
