@@ -61,7 +61,7 @@ enum Error {
     WorkspaceMemberIsNotString,
 
     #[error("making http request")]
-    Http(#[from] ureq::Error),
+    Http(#[from] Box<ureq::Error>),
 
     #[error("making http request not string")]
     ParsingReleaseInfoNotString,
@@ -92,7 +92,8 @@ impl SetRustVersionCmd {
                 self.channel
             );
             let body = ureq::get(&url)
-                .call()?
+                .call()
+                .map_err(Box::new)?
                 .into_string()
                 .map_err(|_| Error::ParsingReleaseInfoNotString)?;
             let info: toml::Value = toml::from_str(&body)?;
@@ -112,18 +113,17 @@ impl SetRustVersionCmd {
             let major_minor_version = version.split('.').take(2).collect::<Vec<_>>().join(".");
             major_minor_version
         };
-        println!("latest rust-version: {}", latest_version);
+        println!("latest rust-version: {latest_version}");
 
-        self.run_for_manifest(&self.manifest, &latest_version)
+        Self::run_for_manifest(&self.manifest, &latest_version)
     }
 
     pub fn run_for_manifest(
-        &self,
         manifest_path: impl AsRef<std::path::Path>,
         latest_version: &str,
     ) -> Result<(), Error> {
         let manifest_path_str = manifest_path.as_ref().to_string_lossy();
-        println!("{}: reading", manifest_path_str);
+        println!("{manifest_path_str}: reading");
         let manifest_raw = fs::read_to_string(&manifest_path).map_err(Error::ReadingManifest)?;
         let mut manifest = manifest_raw
             .parse::<toml_edit::Document>()
@@ -139,10 +139,7 @@ impl SetRustVersionCmd {
             // If current and latest are same, do nothing.
             if let Some(current_version) = current_version {
                 if current_version == latest_version {
-                    println!(
-                        "{}: up-to-date rust-version: {}",
-                        manifest_path_str, current_version
-                    );
+                    println!("{manifest_path_str}: up-to-date rust-version: {current_version}");
                     return Ok(());
                 }
             }
@@ -165,7 +162,7 @@ impl SetRustVersionCmd {
 
         // Check if workspace, and recursively load member manifests if so.
         if let Some(workspace) = manifest.get("workspace") {
-            println!("{}: found workspace", manifest_path_str);
+            println!("{manifest_path_str}: found workspace");
             let workspace_path = manifest_path
                 .as_ref()
                 .parent()
@@ -184,7 +181,7 @@ impl SetRustVersionCmd {
                 let m_path = workspace_path
                     .join(m.as_str().ok_or(Error::WorkspaceMemberIsNotString)?)
                     .join("Cargo.toml");
-                self.run_for_manifest(m_path, latest_version)?;
+                Self::run_for_manifest(m_path, latest_version)?;
             }
         }
 
@@ -196,6 +193,6 @@ fn main() {
     if let Err(e) = match RootCmd::parse() {
         RootCmd::SetRustVersion(cmd) => cmd.run(),
     } {
-        eprintln!("error: {}", e);
+        eprintln!("error: {e}");
     }
 }
